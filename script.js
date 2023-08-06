@@ -11,10 +11,14 @@ const gameGrid = [];
 const defenders = [];
 const enemies = [];
 const enemyPositions = [];
+const projectiles = [];
+
 let enemiesInterval = 600;
 let numberOfResources = 300;
 let frame = 0;
 let gameOver = false;
+let score = 0;
+
 
 
 
@@ -75,6 +79,46 @@ function handleGameGrid(){ // desenhando cada celula de grid individualmente
 }
 
 // balas
+class Projectile {
+    constructor(x,y){
+        this.x = x;
+        this.y = y;
+        this.width = 10;
+        this.height = 10;
+        this.power = 20;
+        this.speed = 5;
+    }
+    update(){
+        this.x += this.speed;
+    }
+
+    draw(){
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.width, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function handleProjectiles(){
+    for(let i = 0; i < projectiles.length; i++){
+        projectiles[i].update();
+        projectiles[i].draw();
+
+        for (let j = 0; j < enemies.length; j++){
+            if (enemies[j] && projectiles[i] && collision(projectiles[i], enemies[j])){
+                enemies[j].health -= projectiles[i].power;
+                projectiles.splice(i, 1);
+                i--;
+            }
+        }
+
+        if (projectiles[i] && projectiles[i].x > canvas.width - cellSize){
+            projectiles.splice(i, 1);
+            i--;
+        }
+    }
+}
 
 // defensores
 class Defender { // criando molde de defensor
@@ -95,6 +139,19 @@ class Defender { // criando molde de defensor
             ctx.font = "15px 'Press Start 2P'"
             ctx.fillText(Math.floor(this.health), this.x + 25,this.y + 25);
         }
+
+    update(){
+        if (this.shooting)
+        {
+            this.timer++;
+            if (this.timer % 100 === 0){
+                projectiles.push(new Projectile(this.x + 70,this.y + 50));
+            }
+        } else {
+            this.timer = 0;
+        }
+        
+    }
 }
 canvas.addEventListener('click', function(){ // adicionando ao clicar
     const gridPositionX = mouse.x - (mouse.x % cellSize)
@@ -115,12 +172,18 @@ canvas.addEventListener('click', function(){ // adicionando ao clicar
 function handleDefenders(){
     for (let i = 0; i < defenders.length; i++){
         defenders[i].draw();
+        defenders[i].update();
+        if (enemyPositions.indexOf(defenders[i].y) !== -1){ // checando se tem inimigo na mesma linha
+            defenders[i].shooting = true;
+        } else {
+            defenders[i].shooting = false;
+        }
         for (let j = 0; j < enemies.length; j++){
-            if (collision(defenders[i], enemies[j])){ // se colidir com inimigo tirar vida e reduzir velocidade
+            if (defenders[i] && collision(defenders[i], enemies[j])){ // se colidir com inimigo tirar vida e reduzir velocidade
                 enemies[j].movement = 0;
                 defenders[i].health -= 0.2;
             }
-            if (defenders[i].health <=0){
+            if (defenders[i] && defenders[i].health <=0){
                 defenders.splice(i,1);
                 i--;
                 enemies[j].movement = enemies[j].speed;
@@ -161,6 +224,16 @@ function handleEnemies(){
         if (enemies[i].x < 0){
             gameOver = true;
         }
+
+        if (enemies[i].health <= 0){
+            let gainedResources = enemies[i].maxHealth/10;
+            numberOfResources += gainedResources;
+            score += gainedResources;
+            const findThisIndex = enemyPositions.indexOf(enemies[i].y);
+            enemyPositions.splice(findThisIndex, 1);
+            enemies.splice(i, 1);
+            i--;
+        }
     }
     if (frame % enemiesInterval === 0){
         let verticalPosition = Math.floor(Math.random() * 5 + 1) * cellSize;
@@ -177,6 +250,7 @@ function handleGameStatus(){ // lidando com status do jogo
     ctx.fillStyle = "Press Start 2P";
     ctx.font = "30px 'Press Start 2P'";
     ctx.fillText("Recursos: " + numberOfResources, 30,30); // texto e quantidade de recurso do jogador
+    ctx.fillText("Pontuação: " + score, 30,80); // Pontuação do jogador
     if (gameOver){ // animando mensagem de game over na tela
         ctx.fillStyle = 'black';
         ctx.font = "60px 'Press Start 2P'";
@@ -189,6 +263,7 @@ function animate(){
     ctx.fillRect(0,0,controlsBar.width,controlsBar.height); 
     handleGameGrid();
     handleDefenders();
+    handleProjectiles();
     handleEnemies();
     handleGameStatus();
     frame++;
