@@ -138,7 +138,7 @@ class Defender { // criando molde de defensor
             ctx.fillStyle = "blue";
             ctx.fillRect(this.x,this.y, this.width, this.height);
             ctx.fillStyle = "gold";
-            ctx.font = "15px 'Press Start 2P'"
+            ctx.font = "15px 'Press Start 2P'";
             ctx.fillText(Math.floor(this.health), this.x + 25,this.y + 25);
         }
 
@@ -155,21 +155,7 @@ class Defender { // criando molde de defensor
         
     }
 }
-canvas.addEventListener('click', function(){ // adicionando ao clicar
-    const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap
-    const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap
-    if (gridPositionY < cellSize) return; // não deixando adicionar na barra de controle
-    for (let i = 0; i < defenders.length; i++){ // não deixando adicionar em cima de um já existente
-        if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) 
-        return;
-    }
-    let defenderCost = 100;
-    if (numberOfResources >= defenderCost){ // adicionando na array caso tenha recurso suficiente
-        defenders.push(new Defender(gridPositionX, gridPositionY));
-        numberOfResources -= defenderCost //removendo recurso após conseguir colocar
 
-    }
-});
 
 function handleDefenders(){
     for (let i = 0; i < defenders.length; i++){
@@ -190,6 +176,45 @@ function handleDefenders(){
                 i--;
                 enemies[j].movement = enemies[j].speed;
             }
+        }
+    }
+}
+
+// mensagens flutuantes
+const floatingMessages = [];
+class floatingMessage {
+    constructor(value,x,y,size, color){
+        this.value = value;
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.lifeSpan = 0;
+        this.color = color;
+        this.opacity = 1;
+    }
+
+    update(){
+        this.y -= 0.3;
+        this.lifeSpan += 1;
+        if (this.opacity > 0.01) this.opacity -= 0.01;
+    }
+
+    draw(){
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = this.color;
+        ctx.font = this.size + "px 'Press Start 2P'";
+        ctx.fillText(this.value, this.x, this.y);
+        ctx.globalAlpha = 1;
+        }
+}
+
+function handleFloatingMessages(){
+    for(let i = 0; i < floatingMessages.length; i++){
+        floatingMessages[i].update();
+        floatingMessages[i].draw();
+        if (floatingMessages[i].lifespan >= 50) {
+            floatingMessages.splice(i, 1);
+            i--;
         }
     }
 }
@@ -299,6 +324,25 @@ function handleGameStatus(){ // lidando com status do jogo
         ctx.fillText("Você conseguiu " + score + " pontos.", 150,340);
     }
 }
+
+canvas.addEventListener('click', function(){ // adicionando ao clicar
+    const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap
+    const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap
+    if (gridPositionY < cellSize) return; // não deixando adicionar na barra de controle
+    for (let i = 0; i < defenders.length; i++){ // não deixando adicionar em cima de um já existente
+        if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) 
+        return;
+    }
+    let defenderCost = 100;
+    if (numberOfResources >= defenderCost){ // adicionando na array caso tenha recurso suficiente
+        defenders.push(new Defender(gridPositionX, gridPositionY));
+        numberOfResources -= defenderCost //removendo recurso após conseguir colocar
+
+    } else {
+        floatingMessages.push(new floatingMessage('recursos faltando',mouse.x, mouse.y, 15,"blue"));
+    }
+});
+
 function animate(){ 
     ctx.clearRect(0,0, canvas.width, canvas.height);
     ctx.fillStyle = "blue";  // preenchendo barra de controle com azul
@@ -309,6 +353,7 @@ function animate(){
     handleProjectiles();
     handleEnemies();
     handleGameStatus();
+    handleFloatingMessages();
     frame++;
     if (!gameOver) requestAnimationFrame(animate); // se não está com gameover anime.
 }
