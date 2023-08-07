@@ -12,6 +12,8 @@ const defenders = [];
 const enemies = [];
 const enemyPositions = [];
 const projectiles = [];
+const resources = [];
+const winningScore = 50;
 
 let enemiesInterval = 600;
 let numberOfResources = 300;
@@ -125,8 +127,8 @@ class Defender { // criando molde de defensor
     constructor(x,y){
         this.x = x;
         this.y = y;
-        this.width = cellSize;
-        this.height = cellSize;
+        this.width = cellSize - cellGap * 2;
+        this.height = cellSize - cellGap * 2;
         this.shooting = false;
         this.health = 100;
         this.projectiles = [];
@@ -154,8 +156,8 @@ class Defender { // criando molde de defensor
     }
 }
 canvas.addEventListener('click', function(){ // adicionando ao clicar
-    const gridPositionX = mouse.x - (mouse.x % cellSize)
-    const gridPositionY = mouse.y - (mouse.y % cellSize)
+    const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap
+    const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap
     if (gridPositionY < cellSize) return; // não deixando adicionar na barra de controle
     for (let i = 0; i < defenders.length; i++){ // não deixando adicionar em cima de um já existente
         if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) 
@@ -197,8 +199,8 @@ class Enemy{
     constructor(verticalPosition){
         this.x = canvas.width;
         this.y = verticalPosition;
-        this.width = cellSize;
-        this.height = cellSize;
+        this.width = cellSize - cellGap * 2;
+        this.height = cellSize - cellGap * 2;
         this.speed = Math.random() * 0.2 + 0.4;
         this.movement = this.speed;
         this.health = 100;
@@ -235,8 +237,8 @@ function handleEnemies(){
             i--;
         }
     }
-    if (frame % enemiesInterval === 0){
-        let verticalPosition = Math.floor(Math.random() * 5 + 1) * cellSize;
+    if (frame % enemiesInterval === 0 && score < winningScore ){
+        let verticalPosition = Math.floor(Math.random() * 5 + 1) * cellSize + cellGap;
         enemies.push(new Enemy(verticalPosition))
         enemyPositions.push(verticalPosition);
         if (enemiesInterval > 120) enemiesInterval -= 50;
@@ -244,6 +246,38 @@ function handleEnemies(){
 }
 
 //  recursos
+const amounts = [20,30, 40];
+class Resource {
+    constructor(){
+        this.x = Math.random() * (canvas.width - cellSize)
+        this.y = (Math.floor(Math.random() * 5) + 1) * cellSize + 25;
+        this.width = cellSize * 0.6;
+        this.height = cellSize * 0.6;
+        this.amount = amounts[Math.floor(Math.random() * amounts.length)]
+    }
+
+    draw(){
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(this.x,this.y,this.width, this.height);
+        ctx.fillStyle = "black"
+        ctx.font = "20px 'Press Start 2P'";
+        ctx.fillText(this.amount, this.x + 15, this.y + 25);
+    }
+}
+
+function handleResources(){
+    if (frame % 500 === 0 && score < winningScore){
+        resources.push(new Resource());
+    }
+    for (let i = 0; i < resources.length; i++){
+        resources[i].draw();
+        if (resources[i] && mouse.x && mouse.y && collision(resources[i], mouse)){
+            numberOfResources += resources[i].amount;
+            resources.splice(i, 1);
+            i--;
+        }
+    }
+}
 
 // utilidades
 function handleGameStatus(){ // lidando com status do jogo
@@ -256,6 +290,14 @@ function handleGameStatus(){ // lidando com status do jogo
         ctx.font = "60px 'Press Start 2P'";
         ctx.fillText("Fim de jogo", 135,330);
     }
+    if (score >= winningScore && enemies.length === 0)
+    {
+        ctx.fillStyle = "black";
+        ctx.font = "50px 'Press Start 2P'";
+        ctx.fillText("NIVEL COMPLETADO!", 50, 300);
+        ctx.font = "20px 'Press Start 2P'";
+        ctx.fillText("Você conseguiu " + score + " pontos.", 150,340);
+    }
 }
 function animate(){ 
     ctx.clearRect(0,0, canvas.width, canvas.height);
@@ -263,6 +305,7 @@ function animate(){
     ctx.fillRect(0,0,controlsBar.width,controlsBar.height); 
     handleGameGrid();
     handleDefenders();
+    handleResources();
     handleProjectiles();
     handleEnemies();
     handleGameStatus();
@@ -282,3 +325,7 @@ function collision(first, second){ // detectar colisão na diagonal
         return true;
     }
 }
+
+window.addEventListener('resize', function(){
+    canvasPosition = canvas.getBoundingClientRect();
+})
