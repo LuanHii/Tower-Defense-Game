@@ -196,7 +196,7 @@ class floatingMessage {
     update(){
         this.y -= 0.3;
         this.lifeSpan += 1;
-        if (this.opacity > 0.01) this.opacity -= 0.01;
+        if (this.opacity > 0.03) this.opacity -= 0.03;
     }
 
     draw(){
@@ -212,7 +212,7 @@ function handleFloatingMessages(){
     for(let i = 0; i < floatingMessages.length; i++){
         floatingMessages[i].update();
         floatingMessages[i].draw();
-        if (floatingMessages[i].lifespan >= 50) {
+        if (floatingMessages[i].lifeSpan >= 50) {
             floatingMessages.splice(i, 1);
             i--;
         }
@@ -254,6 +254,8 @@ function handleEnemies(){
 
         if (enemies[i].health <= 0){
             let gainedResources = enemies[i].maxHealth/10;
+            floatingMessages.push(new floatingMessage("+" + gainedResources,enemies[i].x,enemies[i].y,25,'gold'));
+            floatingMessages.push(new floatingMessage("+" + gainedResources,440,30,25,'gold'));
             numberOfResources += gainedResources;
             score += gainedResources;
             const findThisIndex = enemyPositions.indexOf(enemies[i].y);
@@ -298,6 +300,8 @@ function handleResources(){
         resources[i].draw();
         if (resources[i] && mouse.x && mouse.y && collision(resources[i], mouse)){
             numberOfResources += resources[i].amount;
+            floatingMessages.push(new floatingMessage("+" + resources[i].amount,resources[i].x,resources[i].y,25,'black'));
+            floatingMessages.push(new floatingMessage("+" + resources[i].amount,440,30,25,'gold'));
             resources.splice(i, 1);
             i--;
         }
