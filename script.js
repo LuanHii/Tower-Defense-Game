@@ -123,6 +123,8 @@ function handleProjectiles(){
 }
 
 // defensores
+const defender1 = new Image();
+defender1.src = 'assets/plant.png';
 class Defender { // criando molde de defensor
     constructor(x,y){
         this.x = x;
@@ -133,16 +135,29 @@ class Defender { // criando molde de defensor
         this.health = 100;
         this.projectiles = [];
         this.timer = 0;
+        this.frameX = 0;
+        this.frameY = 0;
+        this.spriteWidth = 167;
+        this.spriteHeigth = 243;
+        this.minFrame = 0;
+        this.maxFrame = 1;
+
         }
         draw(){ //desenhando junto com vida
-            ctx.fillStyle = "blue";
-            ctx.fillRect(this.x,this.y, this.width, this.height);
+            //ctx.fillStyle = "blue";
+           // ctx.fillRect(this.x,this.y, this.width, this.height);
             ctx.fillStyle = "gold";
             ctx.font = "15px 'Press Start 2P'";
             ctx.fillText(Math.floor(this.health), this.x + 25,this.y + 25);
+            ctx.drawImage(defender1, this.frameX * this.spriteWidth, 0, this.spriteWidth, this.spriteHeigth, this.x, this.y, this.width, this.height);
+            
         }
 
     update(){
+        if (frame % 20 === 0){
+            if (this.frameX < this.maxFrame) this.frameX++;
+            else this.frameX = this.minFrame;
+        }
         if (this.shooting)
         {
             this.timer++;
@@ -220,6 +235,14 @@ function handleFloatingMessages(){
 }
 
 // inimigos
+const enemyTypes = [];
+const enemy1 = new Image();
+const enemy2 = new Image();
+enemy1.src = 'zombie.png';
+enemy2.src = 'assets/zombie2.png';
+enemyTypes.push(enemy1);
+enemyTypes.push(enemy2);
+
 class Enemy{
     constructor(verticalPosition){
         this.x = canvas.width;
@@ -230,17 +253,31 @@ class Enemy{
         this.movement = this.speed;
         this.health = 100;
         this.maxHealth = this.health;
+        this.enemyType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+        this.frameX = 0;
+        this.frameY = 0; // row do sprite
+        this.minFrame = 0;
+        this.maxFrame = 7;
+        this.spriteWidth = 292;
+        this.spriteHeigth = 410;
     }
     update(){
         this.x -= this.movement;
+        if (frame % 10 === 0){
+            if (this.frameX < this.maxFrame) this.frameX++;
+            else this.frameX = this.minFrame;
+        }
+        
     }
     draw(){
-        ctx.fillStyle = "red";
-        ctx.fillRect(this.x,this.y,this.width,this.height);
+        
+       // ctx.fillStyle = "red";
+        //ctx.fillRect(this.x,this.y,this.width,this.height);
         ctx.fillStyle = "black";
         ctx.font = "15px 'Press Start 2P'"
-        ctx.fillText(Math.floor(this.health), this.x + 25,this.y + 25);
-
+        ctx.fillText(Math.floor(this.health), this.x + 30,this.y - 5);
+        //ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+        ctx.drawImage(this.enemyType, this.frameX * this.spriteWidth, 0, this.spriteWidth, this.spriteHeigth, this.x, this.y, this.width, this.height);
     }
 }
 
