@@ -238,7 +238,7 @@ function handleFloatingMessages(){
 const enemyTypes = [];
 const enemy1 = new Image();
 const enemy2 = new Image();
-enemy1.src = 'zombie.png';
+enemy1.src = 'assets/zombie.png';
 enemy2.src = 'assets/zombie2.png';
 enemyTypes.push(enemy1);
 enemyTypes.push(enemy2);
